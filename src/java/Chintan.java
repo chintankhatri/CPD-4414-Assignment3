@@ -15,10 +15,6 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Response;
 import org.json.simple.JSONObject;
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -32,14 +28,25 @@ import org.json.simple.JSONObject;
  *
  *
  */
-@Path("/question")
+@WebServlet("/product")
 public class Chintan extends HttpServlet {
 
-    @GET
-    @Produces
-    Response Get() {
-        return Response.ok(getResult("select * from products")).build();
+    @Override
 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+        response.setHeader("Content-Type", "text/plain-text");
+        try (PrintWriter out = response.getWriter()) {
+
+            if (!request.getParameterNames().hasMoreElements()) {
+                out.println(getResult("select * from product"));
+            } else {
+                int id = Integer.parseInt(request.getParameter("productid"));
+                out.println(getResult("SELECT * FROM product WHERE productid = ?", String.valueOf(id)));
+            }
+
+        } catch (IOException ex) {
+            System.err.println("Error" + ex.getMessage());
+        }
     }
 
     private String getResult(String query, String... parameters) {
@@ -54,7 +61,7 @@ public class Chintan extends HttpServlet {
             ResultSet rs = pstmt.executeQuery();
 
             while (rs.next()) {
-
+                    
                 jObj.put("productid", rs.getInt("productid"));
                 jObj.put("name", rs.getString("name"));
                 jObj.put("description", rs.getString("description"));
